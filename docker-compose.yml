@@ -1,0 +1,51 @@
+version: '3.0'
+
+services:
+  portal-ms:
+    container_name: portal-ms
+    build: 
+      context: .
+    env_file:
+      #- .development.env
+      - .production.env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /mnt/fires-npp:/mnt/fires-npp
+      - /mnt/fires-noaa:/mnt/fires-noaa
+      - /mnt/fires:/mnt/fires
+    ports:
+      - 8002:8002
+      # - 9229:9229
+    command: npm run start
+    depends_on:
+      - postgres-portal
+    restart: always
+    networks:
+      - bpt-main_default
+  postgres-portal:
+    container_name: postgres-portal
+    # image: postgres:15
+    build: 
+      context: .
+      dockerfile: Dockerfile-db
+    env_file:
+      #- .development.env
+      - .production.env
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - bpt-main_default
+
+networks:
+  bpt-main_default:
+    external: true
+
+volumes:
+  pgdata:
